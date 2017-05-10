@@ -50,7 +50,7 @@ model ModelName
 	!generate an unbalanced matrix
 	forall(n in Nodes1) do
 		forall(m in Nodes1 | n <> m) do
-		t_matrix(n,m):= 10+(random*(20-1))
+		t_matrix(n,m):= 10+(random*(20-10))
 		end-do
 		forall(m in Nodes2 | n <> m)do
 		t_matrix(n,m):= 1+(random*(2-1))
@@ -61,7 +61,7 @@ model ModelName
 		t_matrix(n,m):=1+(random*(2-1))
 		end-do
 		forall(m in Nodes2 | n <> m) do
-		t_matrix(n,m):=10+(random*(20-1))
+		t_matrix(n,m):=10+(random*(20-10))
 		end-do
 	end-do
 	
@@ -84,7 +84,7 @@ model ModelName
 	minimize(obj)
 	
 	!Display output
-	writeln("SPLITTED VERSION")
+	writeln("UNBALANCED-SPLITTED VERSION")
 	writeln("Number of nodes: ", Nodes)
 	writeln("Delta: ", Delta)
 	writeln("Max flow minimized: ",getsol(obj))
