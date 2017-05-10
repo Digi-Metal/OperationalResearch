@@ -1,0 +1,122 @@
+model ModelName
+	uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+	uses "mmsystem";
+
+	setparam("XPRS_MAXTIME",-600) 
+	
+	declarations 
+		Nodes = 1..16
+		Delta: integer
+		Seed: integer
+		
+		b : array(Nodes,Nodes) of real
+		tot_traffic: array(Nodes,Nodes) of mpvar
+		node_traffic: array(Nodes,Nodes,Nodes,Nodes) of mpvar
+		fmax: mpvar 
+		
+	end-declarations
+	
+	forall(i,j in Nodes) do
+		b(i,j):=0
+	end-do
+	
+	!definition of Manhattan matrix
+	b(1,2):=1
+	b(2,1):=1
+	b(1,4):=1
+	b(4,1):=1
+	b(1,5):=1
+	b(5,1):=1
+	b(1,13):=1
+	b(13,1):=1
+	b(2,3):=1
+	b(3,2):=1
+	b(2,6):=1
+	b(6,2):=1
+	b(2,14):=1
+	b(14,2):=1
+	b(3,4):=1
+	b(4,3):=1
+	b(3,7):=1
+	b(7,3):=1
+	b(3,15):=1
+	b(15,3):=1
+	b(8,4):=1
+	b(4,8):=1
+	b(16,4):=1
+	b(4,16):=1
+	b(6,5):=1
+	b(5,6):=1
+	b(8,5):=1
+	b(5,8):=1
+	b(9,5):=1
+	b(5,9):=1
+	b(9,10):=1
+	b(10,9):=1
+	b(9,12):=1
+	b(12,9):=1
+	b(9,13):=1
+	b(13,9):=1
+	b(10,11):=1
+	b(11,10):=1
+	b(10,14):=1
+	b(14,10):=1
+	b(11,12):=1
+	b(12,11):=1
+	b(11,15):=1
+	b(15,11):=1
+	b(12,16):=1
+	b(16,12):=1
+	b(13,14):=1
+	b(14,13):=1
+	b(13,16):=1
+	b(16,13):=1
+	b(14,15):=1
+	b(15,14):=1
+	b(15,16):=1
+	b(16,15):=1
+	
+	Delta := 4
+	Seed := 3
+
+	setrandseed(Seed) !set a different seed for each run
+
+	!  generate a matrix of Uniform[1,10] numbers
+	forall(n,m in Nodes | n <> m) do
+		t_matrix(n,m):= 1+(random*(10-1))
+	
+	end-do
+	
+	! objective function
+	obj:=fmax 
+	
+	!constraints
+	forall(i in Nodes, j in Nodes) tot_traffic(i,j) <= fmax
+	forall(i in Nodes, j in Nodes) sum(s in Nodes, d in Nodes) node_traffic(i,j,s,d)=tot_traffic(i,j)
+	forall(s,d in Nodes) do
+	 forall(i in Nodes | i<> s and i <> d) sum(j in Nodes) node_traffic(i,j,s,d) - sum(j in Nodes) node_traffic(j,i,s,d) = 0
+	 sum(j in Nodes) node_traffic(s,j,s,d)=t_matrix(s,d)
+	 sum(j in Nodes) node_traffic(j,s,s,d)=0
+	 sum(j in Nodes) node_traffic(j,d,s,d)=t_matrix(s,d)
+	 sum(j in Nodes) node_traffic(d,j,s,d)=0
+	end-do
+	forall(i in Nodes, j in Nodes, s in Nodes, d in Nodes) node_traffic(i,j,s,d)<=b(i,j)*t_matrix(s,d)
+	
+	!Optimization statement
+	minimize(obj)
+	
+	!Display output
+	writeln("SPLITTED VERSION")
+	writeln("Number of nodes: ", Nodes)
+	writeln("Delta: ", Delta)
+	writeln("Max flow minimized: ",getsol(obj))
+	writeln("Seed :", Seed)
+	
+	forall(i,j in Nodes) do
+		if getsol(b(i,j)) = 1 then
+			writeln("Traffic from node ", i, " and node ", j, " is : ", getsol(tot_traffic(i,j)))
+		else
+			writeln("The link between node ", i, " and node ", j," is not used")
+		end-if
+		end-do
+end-model
