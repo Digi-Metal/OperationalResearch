@@ -89,6 +89,9 @@ model ModelName
 	writeln("Delta: ", Delta)
 	writeln("Max flow minimized: ",getsol(obj))
 	writeln("Seed :", Seed)
+	writeln("T matrix: ")
+	forall(i in Nodes, j in Nodes)
+		writeln(i," - ", j, ": ", getsol(t_matrix(i,j)))
 	
 	forall(i,j in Nodes) do
 		if getsol(b(i,j)) = 1 then
