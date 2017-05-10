@@ -6,7 +6,7 @@ model ModelName
 	declarations 
 		Nodes = 1..16
 		Nodes1 = 1..8
-		Nodes2 = 8..16
+		Nodes2 = 9..16
 	
 		Delta: integer
 		Seed: integer
@@ -27,7 +27,7 @@ model ModelName
 	!  generate a matrix of Uniform[10,20] numbers
 	forall(n in Nodes1) do
 		forall(m in Nodes1 | n <> m) do
-		t_matrix(n,m):= 10+(random*(20-1))
+		t_matrix(n,m):= 10+(random*(20-10))
 		end-do
 		forall(m in Nodes2 | n <> m) do
 		t_matrix(n,m):= 1+(random*(2-1))
@@ -40,7 +40,7 @@ model ModelName
 		t_matrix(n,m):= 1+(random*(2-1))
 		end-do
 		forall(m in Nodes2 | n <> m) do
-		t_matrix(n,m):= 10+(random*(20-1))
+		t_matrix(n,m):= 10+(random*(20-10))
 		end-do
 	end-do
 	
@@ -63,7 +63,7 @@ model ModelName
 	minimize(fmax)
 
 	!Display output
-	writeln("SPLITTED VERSION")
+	writeln("UNBALANCED-SPLITTED VERSION")
 	writeln("Number of nodes: ", Nodes)
 	writeln("Delta: ", Delta)
 	writeln("Max flow minimized: ",getsol(fmax))
