@@ -2,7 +2,7 @@ model ModelName
 	uses "mmxprs"; !gain access to the Xpress-Optimizer solver
 	uses "mmsystem";
 
-	setparam("XPRS_MAXTIME",-10) 
+	setparam("XPRS_MAXTIME",-600) 
 	
 	declarations 
 		Nodes = 1..16
