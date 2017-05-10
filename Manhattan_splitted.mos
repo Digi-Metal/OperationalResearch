@@ -40,7 +40,7 @@ model ModelName
 	end-do
 	
 	Delta := 4
-	Seed := 3
+	Seed := 4
 
 	setrandseed(Seed) !set a different seed for each run
 
