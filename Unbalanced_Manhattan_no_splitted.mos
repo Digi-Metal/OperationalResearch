@@ -85,7 +85,7 @@ model ModelName
 	minimize(obj)
 	
 	!Display output
-	writeln("NON-SPLITTED VERSION")
+	writeln("UNBALANCED-NON-SPLITTED VERSION")
 	writeln("Number of nodes: ", Nodes)
 	writeln("Delta: ", Delta)
 	writeln("Max flow minimized: ",getsol(obj))
