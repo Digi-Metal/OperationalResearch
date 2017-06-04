@@ -1,0 +1,88 @@
+model ModelName
+	uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+	uses "mmsystem";
+
+	setparam("XPRS_MAXTIME",-10) 
+	
+	declarations 
+		Nodes = 1..10
+		start_t: real
+		stop_t: real
+		execution_t: real
+		Delta: integer
+		Seed: integer
+		
+		b : array(Nodes,Nodes) of mpvar
+		tot_traffic: array(Nodes,Nodes) of mpvar
+		node_traffic: array(Nodes,Nodes,Nodes,Nodes) of mpvar
+		fmax: mpvar 
+		
+	end-declarations
+	
+	start_t := gettime
+	
+	Delta := 3
+	Seed := 4
+
+	setrandseed(Seed) !set a different seed for each run
+
+	!  generate a matrix of Uniform[1,10] numbers
+	forall(n,m in Nodes | n <> m) do
+		t_matrix(n,m):= 1+(random*(10-1))
+	
+	end-do
+	
+	! objective function
+	obj:=fmax 
+	
+	
+	
+	!constraints
+	forall(i in Nodes, j in Nodes) tot_traffic(i,j) <= fmax
+	forall(i in Nodes, j in Nodes) sum(s in Nodes, d in Nodes) node_traffic(i,j,s,d)=tot_traffic(i,j)
+	forall(i in Nodes, j in Nodes) b(i,j) is_binary
+	forall(i in Nodes) sum(j in Nodes) b(i,j) <= Delta
+	forall(j in Nodes) sum(i in Nodes) b(i,j) <= Delta
+	forall(s,d in Nodes) do
+	 forall(i in Nodes | i<> s and i <> d) sum(j in Nodes) node_traffic(i,j,s,d) - sum(j in Nodes) node_traffic(j,i,s,d) = 0
+	 sum(j in Nodes) node_traffic(s,j,s,d)=t_matrix(s,d)
+	 sum(j in Nodes) node_traffic(j,s,s,d)=0
+	 sum(j in Nodes) node_traffic(j,d,s,d)=t_matrix(s,d)
+	 sum(j in Nodes) node_traffic(d,j,s,d)=0
+	end-do
+	forall(i in Nodes, j in Nodes, s in Nodes, d in Nodes) node_traffic(i,j,s,d)<=b(i,j)*t_matrix(s,d)
+	
+	
+	
+
+	!Optimization statement
+	minimize(obj)
+	
+	stop_t := gettime
+	
+	
+
+	
+	execution_t := stop_t-start_t
+	
+	!Display output
+	writeln("SPLITTED VERSION")
+	writeln("Number of nodes: ", Nodes)
+	writeln("Delta: ", Delta)
+	writeln("Max flow minimized: ",getsol(obj))
+	writeln("Seed :", Seed)
+	writeln("Execution time: ", execution_t, " s")  
+	wrtieln("CANTIUS IS COPYING EVERYTHING!")
+	
+	forall(i,j in Nodes) do
+		if getsol(b(i,j)) = 1 then
+			writeln("Traffic from node ", i, " and node ", j, " is : ", getsol(tot_traffic(i,j)))
+		else
+			writeln("The link between node ", i, " and node ", j," is not used")
+		end-if
+		end-do
+end-model
+			
+	
+	
+	
