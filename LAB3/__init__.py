@@ -22,7 +22,7 @@ class Topology(object, nx.Graph, BaseTopology):
     for u in nodes:
         for v in nodes:
             if u != v:
-                G.add_weighted_edges_from([(u, v, np.random.uniform(1.0, 4.0))])
+                G.add_edges_from([(u, v)], weight=np.random.uniform(1.0, 4.0), status='DELETABLE')
                 T_matrix[u, v] = np.random.uniform(0.5, 1.5)
 
     print T_matrix
