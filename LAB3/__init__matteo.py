@@ -55,15 +55,20 @@ if __name__ == '__main__':
 
     print T_matrix
     minimum = findMinNotDiagR(T_matrix,N)
-    print (nx.shortest_path(G,0,minimum[0]))
+    #x = nx.shortest_path(G,0,minimum[0])
 
     print G.edges()
     for i in range(N):
         G.remove_edge(i,minimum[i])
 
-    print (G.edges())
+    print (G.edge)
 
-    print (nx.shortest_path(G,0,minimum[0]))
+    for i in range(N):
+        edges = nx.shortest_path(G,i,minimum[i])
+        for j in range(1,len(edges)):
+            G.edge[i][j]['weight'] += T_matrix[i,minimum[i]]
+
+
 
     nx.draw_networkx(G, arrows=True, with_labels=True)
 
