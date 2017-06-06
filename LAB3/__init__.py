@@ -22,8 +22,14 @@ class Topology(object, nx.Graph, BaseTopology):
     for u in nodes:
         for v in nodes:
             if u != v:
-                G.add_edges_from([(u, v)], weight=np.random.uniform(1.0, 4.0), status='DELETABLE')
-                T_matrix[u, v] = np.random.uniform(0.5, 1.5)
+                flow = np.random.uniform(0.5, 1.5)
+                G.add_edges_from([(u, v)], weight=flow , status='DELETABLE')
+                T_matrix[u, v] = flow
+
+    for n, nbrs in G.adjacency_iter():
+        for nbr, eattr in nbrs.items():
+            data = eattr['weight']
+            print('(%d, %d, %.3f)' % (n, nbr, data))
 
     print T_matrix
     nx.draw_networkx(G, arrows=True, with_labels=True)
