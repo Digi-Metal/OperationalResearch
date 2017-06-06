@@ -14,7 +14,7 @@ class Topology(object, nx.Graph, BaseTopology):
     def __init__(self, data=None, name="", **kwargs):
         super(Topology, self).__init__(data=data, name=name, **kwargs)
 
-    G = nx.Graph()
+    G = nx.DiGraph()
 
     N = 5
     nodes = range(N)
@@ -25,15 +25,21 @@ class Topology(object, nx.Graph, BaseTopology):
                 flow = np.random.uniform(0.5, 1.5)
                 G.add_edges_from([(u, v)], weight=flow , status='DELETABLE')
                 T_matrix[u, v] = flow
-                delta = list(G.degree(range(N)).values())
+                delta_in = list(G.in_degree(range(N)).values())
+                delta_out = list(G.out_degree(range(N)).values())
+
+    minimum = list(np.where(T_matrix > 0, T_matrix, T_matrix.max()).min(1))
 
     for n, nbrs in G.adjacency_iter():
         for nbr, eattr in nbrs.items():
             data = eattr['weight']
             print('(%d, %d, %.3f)' % (n, nbr, data))
 
-    print delta
+    print delta_in
+    print delta_out
     print T_matrix
+    print minimum
+
     nx.draw_networkx(G, arrows=True, with_labels=True)
     plt.show()
 
