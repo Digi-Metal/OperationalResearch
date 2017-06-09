@@ -4,40 +4,66 @@ import matplotlib.pyplot as plt
 
 class Topology(object, nx.Graph):
 
-    N = 5
-    delta = 3
+    N = 20
+    delta = 4
     nodes = range(N)
     np.random.seed(5)
-    G = nx.DiGraph()
+    degree = [delta for i in xrange(N)]
+    G = nx.directed_havel_hakimi_graph(degree, degree)
+    G = nx.DiGraph(G)
 
-    edges = G.edges_iter()
-    for u, v in list(edges):
-        if G.has_edge(u, v) & G.has_edge(v, u):
-            G.remove_edge(u, v)
+    bb = nx.edge_betweenness_centrality(G, normalized=False)
+    nx. set_edge_attributes(G, 'weight', bb)
+    nx.set_edge_attributes(G, 'capacity', bb)
+
+    # edges = G.edges_iter()
+    # new_edge_list = []
+
+    # for u, v in list(edges):
+    #     if G.has_edge(u, v) & G.has_edge(v, u):
+    #         G.remove_edge(v, u)
+    #         new_edge_list.append([u, v])
 
     T_matrix = np.zeros((N, N))
-    tot_edges = N
-    edge_list = []
-    tot_flow = 0
+    tot_edges = G.number_of_edges()
 
     for s in nodes:
-        tot_edges -= 1
-        if tot_edges > 0:
-            flow = np.random.uniform(0.5, 1.5)
-            G.add_edges_from([(s, s+1)], weight=flow, capacity=np.random.randint(8, 12))
-            T_matrix[s, s+1] = flow
-            edge_list.append([(s, s+1)])
-            tot_flow += flow
-        else:
-            G.add_edges_from([(s, 0)], weight=flow, capacity=np.random.randint(8, 12))
-            break
+        for d in nodes:
+            if s != d:
+                flow = np.random.uniform(0.5, 1.5)
+                T_matrix[s, d] = flow
+                if G.has_edge(s, d):
+                    G.edge[s][d]['weight']=flow
+                    G.edge[s][d]['capacity'] = np.random.randint(8, 12)
+
+    edge_list = []
+
+    for i in range(N):
+        for j in range(N):
+            if len(nx.shortest_path(G, i, j)) > 2:
+                edges = nx.shortest_path(G, i, j)
+                for k in range(1, len(edges) - 1):
+                    G.edge[edges[k - 1]][edges[k]]['weight'] += T_matrix[i][j]
+                    paths = nx.shortest_simple_paths(G, source=i, target=j)
+                    edge_list.append({i: list(paths)})
+
+    fmax = 0
+    (s_f, d_f) = (0, 0)
+
+    for s in G.edge:
+        for d in G.edge[s]:
+            if G.edge[s][d]['weight'] > fmax:
+                fmax = G.edge[s][d]['weight']
+                (s_f, d_f) = (s, d)
 
     flow_value = nx.maximum_flow_value(G, 0, N-1)
 
     np.set_printoptions(precision=3)
     print T_matrix
     print edge_list
-    print 'max flow value', flow_value, 'and total flow', tot_flow
+    print 'max flow value', flow_value, 'and total flow', fmax, 'on', (s_f, d_f)
+    print edge_list
+    # print new_edge_list
 
     nx.draw_networkx(G, arrows=True, with_labels=True)
     plt.show()
