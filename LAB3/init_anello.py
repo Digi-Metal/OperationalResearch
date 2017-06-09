@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import fnss
 import scipy.optimize
 
-N =20
-DELTA = 3
+N =8
+DELTA = 2
 
 def findMaxCardinality(G):
     max = 0
@@ -207,6 +207,9 @@ if __name__=='__main__':
     print fmax
     print (s_f,d_f)
     print len(G.edges())
+
+    for e in G.nodes():
+        print e,G.in_degree(e),G.out_degree(e)
 
 
     plt.show()
