@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 class Topology(object, nx.Graph):
 
-    N = 15
-    delta = 1
+    N = 40
+    delta = 4
     nodes = range(N)
     np.random.seed(6)
     degree = [delta for i in xrange(N)]
