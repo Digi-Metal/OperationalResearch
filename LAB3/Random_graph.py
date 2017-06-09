@@ -41,7 +41,6 @@ class Topology(object, nx.Graph):
                     f_value = flow_value
                     (p, a) = (i, j)
 
-
     fmax = 0
     (s_f, d_f) = (0, 0)
 
@@ -51,13 +50,13 @@ class Topology(object, nx.Graph):
                 fmax = G.edge[s][d]['weight']
                 (s_f, d_f) = (s, d)
 
+
     tot_edges = G.number_of_edges()
 
     np.set_printoptions(precision=3)
     print T_matrix
     print tot_edges
     print 'max flow value on capacity', flow_value, 'on',(p, a), 'and max flow on weight', fmax, 'on', (s_f, d_f)
-
 
     nx.draw_networkx(G, arrows=True, with_labels=True)
     plt.show()
