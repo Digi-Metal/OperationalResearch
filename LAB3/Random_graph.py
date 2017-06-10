@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 class Topology(object, nx.Graph):
 
-    N = 40
-    delta = 4
+    N = 20
+    delta = 2
     nodes = range(N)
     np.random.seed(6)
     degree = [delta for i in xrange(N)]
@@ -49,7 +49,6 @@ class Topology(object, nx.Graph):
             if G.edge[s][d]['weight'] > fmax:
                 fmax = G.edge[s][d]['weight']
                 (s_f, d_f) = (s, d)
-
 
     tot_edges = G.number_of_edges()
 
