@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 N = 20
 
 class Topology():
-
-    np.random.seed(5)
+    def __init__(self):
+        np.random.seed(5)
 
     def createRing(self,T_matrix,NN):
         flow_nodes = []
