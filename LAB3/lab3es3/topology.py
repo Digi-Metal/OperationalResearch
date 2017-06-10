@@ -7,7 +7,7 @@ N = 20
 class Topology():
     def __init__(self):
         np.random.seed(5)
-    def createRing(self,T_matrix,NN):
+    def createRing(self,T_matrix,N):
         flow_nodes = []
         used = np.zeros(N)
         (s,d)= self.findMaxMatrix(T_matrix,N)
@@ -50,7 +50,7 @@ class Topology():
         return T_matrix
 
 
-    def routing(self,G,tsd,paths):
+    def routing(self,G,tsd,paths,N):
         for s in range(N):
             paths[s] = {}
             for d in range(N):
