@@ -56,9 +56,6 @@ class Manhattan(object, nx.Graph):
         else:
             break
 
-    nx.draw_networkx(G, arrows=True, with_labels=True)
-    plt.show()
-
     for s in range(N):
         for d in range(N):
             if G.has_edge(s, d):
@@ -69,7 +66,6 @@ class Manhattan(object, nx.Graph):
     (p, a) = (0, 0)
     for i in range(N):
         for j in range(N):
-            if len(nx.shortest_path(G, i, j)) > 2:
                 edges = nx.shortest_path(G, i, j, weight='weight')
                 for k in range(len(edges) - 1):
                     G.edge[edges[k]][edges[k + 1]]['weight'] += T_matrix[i][j]
@@ -94,3 +90,6 @@ class Manhattan(object, nx.Graph):
     print T_matrix
     print tot_edges
     print 'max flow value on capacity', flow_value, 'on', (p, a), 'and max flow on weight', fmax, 'on', (s_f, d_f)
+
+    nx.draw_networkx(G, arrows=True, with_labels=True)
+    plt.show()
