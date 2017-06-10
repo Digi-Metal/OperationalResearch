@@ -2,7 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-class Routing(object, nx.Graph):
+class Manhattan(object, nx.Graph):
 
     G = nx.DiGraph()
     N = 16
