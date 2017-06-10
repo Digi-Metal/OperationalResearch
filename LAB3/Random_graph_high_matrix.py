@@ -21,10 +21,15 @@ class Topology(object, nx.Graph):
     for s in nodes:
         for d in nodes:
             if s != d:
-                flow = np.random.uniform(0.5, 1.5)
-                T_matrix[s, d] = flow
+                p = np.random.uniform(0.0,1.0)
+                if p <= 0.1:
+                    flow_high = np.random.uniform(5.0, 15.0)
+                    T_matrix[s, d] = flow_high
+                else:
+                    flow_low = np.random.uniform(0.5, 1.5)
+                    T_matrix[s, d] = flow_low
                 if G.has_edge(s, d):
-                    G.edge[s][d]['weight']=flow
+                    G.edge[s][d]['weight']= T_matrix[s,d]
                     G.edge[s][d]['capacity'] = np.random.randint(8, 12)
 
     f_value = 0
