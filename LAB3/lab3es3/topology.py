@@ -2,12 +2,11 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 
-N = 40
+N = 20
 
 class Topology():
     def __init__(self):
         np.random.seed(5)
-
     def createRing(self,T_matrix,NN):
         flow_nodes = []
         used = np.zeros(N)
@@ -42,7 +41,11 @@ class Topology():
         for u in range(N):
             for v in range(N):
                 if u != v:
-                    flow = np.random.uniform(min, max)
+                    p = np.random.uniform(0,1)
+                    if p<=0.1:
+                        flow = np.random.uniform(min*10,max*10)
+                    else:
+                        flow = np.random.uniform(min, max)
                     T_matrix[u, v] = flow
         return T_matrix
 
@@ -84,6 +87,11 @@ class Topology():
                     fmax = G.edge[s][d]['weight']
                     (s_f,d_f) = (s,d)
         return fmax
+
+
+
+
+
 
     def findMaxMatrix(self,T_matrix,N):
         max = 0
