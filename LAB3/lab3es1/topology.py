@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 
-N = 20
+N = 40
 
 class Topology():
     def createRing(self,T_matrix,NN):
@@ -81,11 +81,6 @@ class Topology():
                     fmax = G.edge[s][d]['weight']
                     (s_f,d_f) = (s,d)
         return fmax
-
-
-
-
-
 
     def findMaxMatrix(self,T_matrix,N):
         max = 0

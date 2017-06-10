@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 class Topology(object, nx.Graph):
 
-    N = 20
-    delta = 2
+    N = 40
+    delta = 4
     nodes = range(N)
     np.random.seed(6)
     degree = [delta for i in xrange(N)]
@@ -31,15 +31,14 @@ class Topology(object, nx.Graph):
     (p, a) = (0, 0)
     for i in range(N):
         for j in range(N):
-            if len(nx.shortest_path(G, i, j)) > 2:
-                edges = nx.shortest_path(G, i, j, weight='weight')
-                for k in range(len(edges) - 1):
-                    G.edge[edges[k]][edges[k+1]]['weight'] += T_matrix[i][j]
-            if i != j:
-                flow_value = nx.maximum_flow_value(G, i, j)
-                if flow_value > f_value:
-                    f_value = flow_value
-                    (p, a) = (i, j)
+            edges = nx.shortest_path(G, i, j, weight='weight')
+            for k in range(len(edges) - 1):
+                G.edge[edges[k]][edges[k+1]]['weight'] += T_matrix[i][j]
+        if i != j:
+            flow_value = nx.maximum_flow_value(G, i, j)
+            if flow_value > f_value:
+                f_value = flow_value
+                (p, a) = (i, j)
 
     fmax = 0
     (s_f, d_f) = (0, 0)
