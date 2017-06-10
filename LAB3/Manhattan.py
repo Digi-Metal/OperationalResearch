@@ -2,9 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-class Manhattan(object, nx.Graph):
-
+class Routing(object, nx.Graph):
 
     G = nx.DiGraph()
     N = 16
@@ -20,11 +18,11 @@ class Manhattan(object, nx.Graph):
     for u in nodes:
         for v in nodes:
             if u != v:
-                if ((u and v) > 4 and (u and v) < 7) or ((u and v) > 8 and (u and v) < 11):
-                    flow_high = np.random.uniform(1.0, 1.5)
+                if (u > 4 and v > 4 and u < 7 and v < 7) or (u > 8 and v > 8 and u < 11 and v < 11) or (u == 5 and v == 9) or (u==9 and v == 5) or (u == 6 and v== 10) or (u==10 and v ==6):
+                    flow_high = np.random.uniform(10, 15)
                     T_matrix[u, v] = flow_high
                 else:
-                    flow_low = np.random.uniform(0.5, 1.0)
+                    flow_low = np.random.uniform(0.5, 1.5)
                     T_matrix[u, v] = flow_low
 
     for i in nodes:
@@ -58,6 +56,9 @@ class Manhattan(object, nx.Graph):
         else:
             break
 
+    nx.draw_networkx(G, arrows=True, with_labels=True)
+    plt.show()
+
     for s in range(N):
         for d in range(N):
             if G.has_edge(s, d):
@@ -89,10 +90,7 @@ class Manhattan(object, nx.Graph):
 
     tot_edges = G.number_of_edges()
 
-    np.set_printoptions(precision=3)
+    np.set_printoptions(precision=3,  linewidth=150)
     print T_matrix
     print tot_edges
     print 'max flow value on capacity', flow_value, 'on', (p, a), 'and max flow on weight', fmax, 'on', (s_f, d_f)
-
-    nx.draw_networkx(G, arrows=True, with_labels=True)
-    plt.show()
