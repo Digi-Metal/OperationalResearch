@@ -5,7 +5,7 @@ import time
 from topology import Topology
 from matplotlib import pyplot as plt
 
-N = 40
+N = 20
 DELTA = 4
 
 if __name__ == '__main__':
