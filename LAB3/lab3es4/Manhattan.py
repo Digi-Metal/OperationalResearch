@@ -2,9 +2,7 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class Manhattan(object, nx.Graph):
-
 
     G = nx.DiGraph()
     N = 16
@@ -20,11 +18,11 @@ class Manhattan(object, nx.Graph):
     for u in nodes:
         for v in nodes:
             if u != v:
-                if ((u and v) > 4 and (u and v) < 7) or ((u and v) > 8 and (u and v) < 11):
-                    flow_high = np.random.uniform(1.0, 1.5)
+                if (u > 4 and v > 4 and u < 7 and v < 7) or (u > 8 and v > 8 and u < 11 and v < 11) or (u == 5 and v == 9) or (u==9 and v == 5) or (u == 6 and v== 10) or (u==10 and v ==6):
+                    flow_high = np.random.uniform(10, 15)
                     T_matrix[u, v] = flow_high
                 else:
-                    flow_low = np.random.uniform(0.5, 1.0)
+                    flow_low = np.random.uniform(0.5, 1.5)
                     T_matrix[u, v] = flow_low
 
     for i in nodes:
@@ -68,7 +66,6 @@ class Manhattan(object, nx.Graph):
     (p, a) = (0, 0)
     for i in range(N):
         for j in range(N):
-            if len(nx.shortest_path(G, i, j)) > 2:
                 edges = nx.shortest_path(G, i, j, weight='weight')
                 for k in range(len(edges) - 1):
                     G.edge[edges[k]][edges[k + 1]]['weight'] += T_matrix[i][j]
@@ -89,7 +86,7 @@ class Manhattan(object, nx.Graph):
 
     tot_edges = G.number_of_edges()
 
-    np.set_printoptions(precision=3)
+    np.set_printoptions(precision=3,  linewidth=150)
     print T_matrix
     print tot_edges
     print 'max flow value on capacity', flow_value, 'on', (p, a), 'and max flow on weight', fmax, 'on', (s_f, d_f)
