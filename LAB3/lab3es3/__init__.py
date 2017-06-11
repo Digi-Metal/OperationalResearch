@@ -8,7 +8,7 @@ N = 20
 DELTA = 4
 
 if __name__ == '__main__':
-    for N in [20]:
+    for N in [30,40]:
         for DELTA in[2,4,8]:
             f_max_vector = []
             for i in range(5):
@@ -19,7 +19,7 @@ if __name__ == '__main__':
                 #creo il ring andando a scegliere gli archi con maggior traffico
                 tsd_tmp = T_matrix.copy()
                 G,flow_ring = t.createRing(tsd_tmp,N)
-                print flow_ring
+                #print flow_ring
                 #nx.draw_networkx(G)
                 #plt.show(block=False)
                 paths = {}

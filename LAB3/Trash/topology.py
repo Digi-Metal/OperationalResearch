@@ -7,7 +7,6 @@ N = 20
 class Topology():
     def __init__(self):
         np.random.seed(5)
-
     def createRing(self,T_matrix,N):
         flow_nodes = []
         used = np.zeros(N)
@@ -42,7 +41,11 @@ class Topology():
         for u in range(N):
             for v in range(N):
                 if u != v:
-                    flow = np.random.uniform(min, max)
+                    p = np.random.uniform(0,1)
+                    if p<=0.1:
+                        flow = np.random.uniform(min*10,max*10)
+                    else:
+                        flow = np.random.uniform(min, max)
                     T_matrix[u, v] = flow
         return T_matrix
 
@@ -52,7 +55,7 @@ class Topology():
             paths[s] = {}
             for d in range(N):
                 if not G.has_edge(s,d) and s!=d:
-                    edges = nx.shortest_path(G,s,d,weight='weight')
+                    edges = nx.shortest_path(G,s,d)
                     paths[s][d] = edges
                     for e in range(len(edges)-1):
                         G.edge[edges[e]][edges[e+1]]['weight'] += tsd[s][d]
@@ -85,6 +88,11 @@ class Topology():
                     (s_f,d_f) = (s,d)
         return fmax
 
+
+
+
+
+
     def findMaxMatrix(self,T_matrix,N):
         max = 0
         (s,d) = (0,0)
@@ -108,4 +116,16 @@ class Topology():
         matrix[s][d] = 0
         return (s,d)
 
+
+    def findMaxAndRemove(self,matrix,N):
+        max = 0
+        (s,d) = (0,0)
+        for i in range(N):
+            for j in range(N):
+                if matrix[i][j]>max:
+                    (s,d) = (i,j)
+                    max = matrix[i][j]
+
+        matrix[s][d] = 0
+        return (s,d)
 
