@@ -2,6 +2,8 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from topology import Topology
+import time
+import calendar
 
 
 if __name__ == '__main__':
@@ -14,8 +16,6 @@ if __name__ == '__main__':
 
     T_matrix = t.createTrafficMatrix(0.5,1.5,N)
     G = t.createManhattanFullDuplex(N)
-
-
 
     remaining_node = 4*np.ones(N)
     rem = 4*np.ones(N)
@@ -87,14 +87,51 @@ if __name__ == '__main__':
         print G.node[4*j+0]['node'], G.node[4*j+1]['node'], G.node[4*j+2]['node'], G.node[4*j+3]['node']
 
 
+    #routing of the traffic on the Manhattan Topology
     t.routingManahttan(G,T_matrix,N)
 
     f_max =  t.fmax(G)
 
     print f_max
 
-
+    #plot of the topology
     nx.draw_networkx(G, arrows=True, with_labels=True)
-
     plt.title('fmax = ' + str(f_max[0]))
     plt.show()
+
+    #copy of the graph on which we make the simulated annealing
+    G_first = G.copy()
+    fMax = f_max[0]
+    for i in range(200):
+        print '-----------------'
+        #T = local time expressed in seconds
+        T = calendar.timegm(time.gmtime())
+        print ('Before swapping')
+        t.printManahttan(G_first)
+
+        sA = t.simulatedAnnealing(T_matrix,G_first,N)
+        print 'After swapping'
+        t.printManahttan(sA[1])
+        if sA[0] < fMax:
+            G_first = sA[1]
+            print 'Solution accepted   fmax-> ',sA[0]
+            accepted = True
+            fMax = sA[0]
+
+        else:
+            tsh = np.random.uniform(0,1)
+            # if the value is not below the f_max previously computed
+            # we extract a p based on Time and number of iterations
+            p = np.exp(-i/T)
+            if p > tsh:
+                G_first = sA[1]
+                print 'Solution accepted for p  fmax->',sA[0]
+                accepted = True
+                fMax = sA[0]
+
+            else:
+                accepted = False
+                print 'Solution not accepted'
+
+
+    print f_max[0] , fMax

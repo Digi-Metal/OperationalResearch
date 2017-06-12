@@ -2,8 +2,6 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 
-N = 20
-
 class Topology():
     def __init__(self):
         np.random.seed(5)

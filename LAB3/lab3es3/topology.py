@@ -88,11 +88,6 @@ class Topology():
                     (s_f,d_f) = (s,d)
         return fmax
 
-
-
-
-
-
     def findMaxMatrix(self,T_matrix,N):
         max = 0
         (s,d) = (0,0)

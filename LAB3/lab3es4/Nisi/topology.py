@@ -151,7 +151,6 @@ class Topology():
                     T_matrix[u, v] = flow
         return T_matrix
 
-
     def routing(self,G,tsd,paths,N):
         for s in range(N):
             paths[s] = {}
@@ -171,7 +170,6 @@ class Topology():
                 if not G.has_edge(s,d) and s!=d:
                     edges = nx.shortest_path(G,s,d,weight='weight')
                     for e in range(len(edges)-1):
-                        #G.edge[edges[e]][edges[e+1]]['weight'] += tsd[s][d]
                         G.edge[edges[e]][edges[e+1]]['weight'] += tsd[G.node[s]['node']][G.node[d]['node']]
 
     def cleanTheGraphForRouting(self,G,tsd):
@@ -222,9 +220,51 @@ class Topology():
         matrix[s][d] = 0
         return (s,d)
 
-
     def findMaxForRowAndRemove(self,matrix,row):
         argmax = np.argmax(matrix[row])
         max = matrix[row][argmax]
         matrix[row][argmax] = 0
         return argmax,max
+
+    def swapNodes(self,G,n1,n2):
+        x = G.node[n1]['node']
+        G.node[n1]['node'] = G.node[n2]['node']
+        G.node[n2]['node'] = x
+
+    def cleanAndReRouteManh(self,G,tsd,N):
+
+        #'cleaning' the graph
+        for s,d in G.edges():
+            G.edge[s][d]['weight'] = 0
+
+        for s in range(N):
+            for d in range(N):
+                if s!=d:
+                    if G.has_edge(s,d):# and s!=d:
+                        G.edge[s][d]['weight'] = tsd[G.node[s]['node']][G.node[d]['node']]
+
+                    else:
+                    #if not G.has_edge(s,d):# and s!=d:
+                        edges = nx.shortest_path(G,s,d,weight='weight')
+                        for e in range(len(edges)-1):
+                            #G.edge[edges[e]][edges[e+1]]['weight'] += tsd[s][d]
+                            G.edge[edges[e]][edges[e+1]]['weight'] += tsd[G.node[s]['node']][G.node[d]['node']]
+
+    def printManahttan(self,G):
+        for j in range(4):
+            print G.node[4 * j + 0]['node'], G.node[4 * j + 1]['node'], G.node[4 * j + 2]['node'], G.node[4 * j + 3]['node']
+
+
+    def simulatedAnnealing(self,tsd,G,N):
+        G_first = G.copy()
+        # Simultaed annealing
+        n1 = np.random.randint(0, N - 1)
+        n2 = np.random.randint(0, N - 1)
+        while n1 == n2:
+            n2 = np.random.randint(0, N-1)
+
+        self.swapNodes(G_first, n1, n2)
+        #self.printManahttan(G_first)
+        self.cleanAndReRouteManh(G_first, tsd, N)
+
+        return self.fmax(G_first)[0],G_first
