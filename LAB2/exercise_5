@@ -1,0 +1,97 @@
+model ModelName
+	uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+	uses "mmsystem";
+
+	setparam("XPRS_MAXTIME",-600) 
+	
+	declarations 
+		Nodes = 1..8
+		Delta: integer
+		Seed: integer
+		
+		b : array(Nodes,Nodes) of mpvar
+		tot_traffic: array(Nodes,Nodes) of mpvar
+		node_traffic_s: array(Nodes,Nodes,Nodes) of mpvar
+		t_matrix: array(Nodes,Nodes) of real
+		fmax: mpvar 
+		
+		k: real
+		g: real
+		
+	end-declarations
+	
+	Delta := 3
+	Seed := 4
+
+	setrandseed(Seed) !set a different seed for each run
+
+	!  generate a matrix of Uniform[1,10] numbers
+	forall(n,m in Nodes | n <> m) do
+		t_matrix(n,m):= 1+(random*(10-1))
+	
+	end-do
+	
+	! objective function
+	obj:=fmax 
+	
+	! Variables
+	forall( i , j in Nodes) b(i,j) is_binary
+	
+	! is_semcont 0 To make sure that they are restricts to be zero or continuous 
+	forall(i , j in Nodes) tot_traffic(i,j) is_semcont 0
+	
+	forall(i ,j,s in Nodes) node_traffic_s(i,j,s) is_semcont 0
+	
+	!The # of input flow to node j is less than or equal to output flow of node i
+	forall(i in Nodes) sum(j in Nodes) b(i,j) <= Delta
+	
+	!The # of output flow of node i is less than or equal to input flow of node j
+	forall(j in	Nodes) sum(i in Nodes) b(i,j) <= Delta
+	
+	! The flow from i to j is less than or equal to maxmimum flow alowded on the link between i and j
+	forall(i , j in Nodes | i<>j) tot_traffic(i,j) <= fmax
+	
+	! total traffic in equal to sumation of all the flows exiting from s
+	forall (i ,j in Nodes | i<>j) sum(s in Nodes) node_traffic_s(i,j,s) = tot_traffic(i,j)
+	
+	! The total flow entering to the S is Zero
+	forall(s in Nodes) sum(j in Nodes | j <> s) node_traffic_s(j,s,s) = 0
+	
+	!the total traffic exiting from s is equal to tst
+	forall(s in Nodes) do 
+	k:= sum(v in Nodes)t_matrix(s,v)
+	sum(j in Nodes| j <> s) node_traffic_s(s,j,s) = k
+	end-do
+	
+	! The traffic flow can path only links that are existed
+	forall(s ,i ,j in Nodes |  i<>j ) do
+	g:= sum (v in Nodes)t_matrix(s,v)
+	node_traffic_s(i,j,s)<=b(i,j)* g
+	end-do
+	
+	! The total flow entering to node i is equal to the total flow exiting node i( it is transit)
+	forall(s , i in Nodes | i<>s ) sum(j in Nodes|j<>s and j<>i) (node_traffic_s(i,j,s)-node_traffic_s(j,i,s))=0
+	
+	! From paper
+	fmax >= 0
+	forall(i , j in Nodes | i<>j) tot_traffic(i,j) >=0
+	forall(s ,i,j in Nodes |  i<>j) node_traffic_s(i,j,s)>=0
+	
+	!Optimization statement
+	minimize(obj)
+	
+	!Display output
+	writeln("SPLITTED VERSION STARTING FROM THE SOURCE")
+	writeln("Number of nodes: ", Nodes)
+	writeln("Delta: ", Delta)
+	writeln("Max flow minimized: ",getsol(obj))
+	writeln("Seed :", Seed)
+	
+	forall(i,j in Nodes) do
+		if getsol(b(i,j)) = 1 then
+			writeln("Traffic from node ", i, " and node ", j, " is : ", getsol(tot_traffic(i,j)))
+		else
+			writeln("The link between node ", i, " and node ", j," is not used")
+		end-if
+		end-do
+end-model
