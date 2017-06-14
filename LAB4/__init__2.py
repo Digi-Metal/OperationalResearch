@@ -6,6 +6,7 @@ import networkx as nx
 import Queue
 N = 20
 
+
 if __name__ == '__main__':
     gn = GreenNetwork(N,percentage_inactive=0.5,capacity=100,node_power = 2,link_power = 4,alpha=0.5)
     tsd = gn.createTrafficMatrix(0.5,1.5,N)
