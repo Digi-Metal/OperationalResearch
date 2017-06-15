@@ -1,14 +1,7 @@
-from topology import Topology
 from green import GreenNetwork
 from matplotlib import pyplot as plt
 from operator import itemgetter
-import scipy
-import operator
-
 import networkx as nx
-import Queue
-
-#N = 10
 
 
 color = {}
@@ -18,9 +11,9 @@ color['central'] = 'green'
 
 if __name__ == '__main__':
 
-    for N in [10]:
-        for perc in [0.2]:
-            for capacity in [40]:
+    for N in [16]:
+        for perc in [0.25]:
+            for capacity in [20]:
                 print '-----------------'
                 print 'Nodes = ',N,' R = ', perc*100, '% C = ',capacity
 
@@ -30,16 +23,23 @@ if __name__ == '__main__':
                 color_map = gn.getColorMap()
 
 
-                nx.draw_networkx(G,node_color = color_map)
-                plt.show(block = False)
 
 
                 gn.routing(G,tsd,N)
 
                 for n in G.nodes():
                     gn.setNodePower(G,n)
+                    print n,G.node[n]['power']
 
-                print 'Initial topology',gn.getPower2(G)
+                initial = gn.getPower2(G)
+                print 'Initial topology',initial
+
+                plt.figure()
+                nx.draw_networkx(G,node_color = color_map)
+                title = 'Initial topology | N '+str(N)+ '| Power = '+str(initial)
+                plt.title (title)
+                plt.show(block = False)
+
 
                 G_copy = G.copy()
                 transient = gn.getTransient()
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                     node = transient_dict[i][0]
                     adj = G_copy.edges(node)
                     node_type = G_copy.node[node]['type']
-                    if gn.anyPeer(G_copy,node) :#and gn.notUtilized(G_copy,node) == True :
+                    if gn.anyPeer(G_copy,node) or gn.justTheCentral(G_copy,node) :#and gn.notUtilized(G_copy,node) == True :
                         #print 'Trying to remove', node
                         power_node = G_copy.node[node]['power']
                         gn.disable_node(G_copy,node)
@@ -104,17 +104,18 @@ if __name__ == '__main__':
                 new_color_map = gn.getColorMap()
 
                 plt.figure()
-                title = 'After having disabled nodes | N = '+str(N)+ ' router ='+str(perc*100)+'%' # | Power = ' + str(gn.getPower2(G_copy))
+                title = 'After having disabled nodes | N = '+str(N)+ ' R ='+str(perc*100)+'%' # | Power = ' + str(gn.getPower2(G_copy))
 
                 plt.title(title)
                 nx.draw_networkx(G_copy, node_color=new_color_map)
                 plt.show(block=False)
 
-                print 'After removing nodes',gn.getPower2(G_copy)
+                after_nodes = gn.getPower2(G_copy)
+                print 'After removing nodes',after_nodes
 
                 for n in G_copy.nodes():
                     gn.setNodePower(G_copy,n)
-                    #print n,G_copy.node[n]['power']
+                    print n,G_copy.node[n]['power']
 
                 #trying to remove edges
 
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 
                     if G_copy.node[n]['enabled'] == False:
                         for s,d in G_copy.edges(n):
-                            if G_copy.node[d]['type'] == 'access':
+                            if G_copy.node[d]['type'] == 'access' or G_copy.node[d]['type'] == 'router':
                                 G_copy.remove_edge(s,d)
                                 gn.cleanTheGraphForRouting(G_copy,tsd)
                                 gn.routing(G_copy,tsd,N)
@@ -132,36 +133,47 @@ if __name__ == '__main__':
                     if G_copy.node[n]['type'] == 'access':
                         neighb = G_copy.edges(n)
                         for s,neigh in neighb:
-                            if G_copy.node[neigh]['enabled'] == False:
-                                G_copy.remove_edge(s,neigh)
+                            # if G_copy.node[neigh]['enabled'] == False:
+                            #     G_copy.remove_edge(s,neigh)
+                            #     gn.cleanTheGraphForRouting(G_copy,tsd)
+                            #     gn.routing(G_copy,tsd,N)
+
+
+                            if G_copy.node[neigh]['type'] == 'router':
+                                routers[neigh] = G_copy.edge[n][neigh]
+
+
+
+                        if len(routers) > 1:
+                            routers.__delitem__(max(routers.keys()))
+                            for router in routers:
+                                G_copy.remove_edge(n,router)
                                 gn.cleanTheGraphForRouting(G_copy,tsd)
-                                gn.routing(G_copy,tsd,N)
+                                thereisapath = gn.routing(G_copy,tsd,N)
+                                if thereisapath == False:
+                                    G_copy.add_edges_from([(n,router)],weight = routers[router]['weight'])
 
-
-                        #     if G_copy.node[neigh]['type'] == 'router':
-                        #         routers[neigh] = G_copy.edge[n][neigh]
-                        #
-                        #
-                        #
-                        # if len(routers) > 1:
-                        #     routers.__delitem__(max(routers.keys()))
-                        #     for router in routers:
-                        #         G_copy.remove_edge(n,router)
-                        #         gn.cleanTheGraphForRouting(G_copy,tsd)
-                        #         thereisapath = gn.routing(G_copy,tsd,N)
-                        #         if thereisapath == False:
-                        #             G_copy.add_edges_from([(n,router)],weight = routers[router]['weight'])
-                        #
 
 
                 for node in G_copy.nodes():
                     gn.setNodePower(G_copy,node)
+                    print n,G.node[n]['power']
 
-                print 'After removing edges',gn.getPower2(G_copy)
 
+                after_edges = gn.getPower2(G_copy)
+                print 'After removing edges',after_edges
+                print 'Removing also R-C and C-C',gn.getPower(G_copy)
 
-                print 'Initial nodes', G.nodes()
-                print 'Final node', G_copy.nodes()
+                initial_nodes = len(G.nodes())
+                print 'Initial nodes', len(G.nodes()),G.nodes()
+
+                active_nodes = 0
+                active_list = []
+                for n in G_copy.nodes():
+                    if G_copy.node[n]['enabled'] == True:
+                        active_nodes+=1
+                        active_list.append(n)
+                print 'Final node', active_nodes,active_list
                 print 'Initial edges', len(G.edges())
                 print 'Final edges', len(G_copy.edges())
 

@@ -1,6 +1,5 @@
 import networkx as nx
 import numpy as np
-from matplotlib import pyplot as plt
 import Queue
 
 color = {}
@@ -33,7 +32,7 @@ class GreenNetwork():
         self.right_path = 1
         self.edges = []
 
-        np.random.seed(6)
+        np.random.seed(5)
 
 
     def getCapacity(self):
@@ -44,6 +43,12 @@ class GreenNetwork():
             if G.node[s]['type'] == G.node[d]['type'] and G.node[d]['enabled'] == True:
                 return True
         return False
+
+    def justTheCentral(self,G,n):
+        for s,d in G.edges(n):
+            if G.node[d]['type'] == 'access':
+                return False
+        return True
 
     def getColorMap(self):
         return self.color_map
@@ -153,6 +158,7 @@ class GreenNetwork():
     def disable_node(self,G,n):
         G.node[n]['enabled'] = False
         G.node[n]['power'] = 0
+
         self.color_map[n] = color['disabled']
 
 
@@ -216,32 +222,73 @@ class GreenNetwork():
 
         return argmin,min
 
+
     def getPower(self,G):
         power = 0
         for node in G.nodes():
-            if G.node[node]['type'] == 'router':
-                power += G.node[node]['power']
-
-        for s,d in G.edges():
-            power += G.edge[s][d]['weight']*self.alpha+self.link_power
-        return power
-
-    def getPower2(self,G):
-        power = 0
-        for node in G.nodes():
-            #if (G.node[node]['type'] == 'router' or G.node[node]['type'] == 'central') and G.node[node]['enabled'] == True:
             if G.node[node]['enabled'] == True:
                 power += G.node[node]['power']
 
         for s,d in G.edges():
-            #if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
             if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'router':
-                power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                if G.node[d]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+self.power['link']
+                else:
+                    power += 0
             if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'central':
-                power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    power += 0
 
-            if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'access':
-                print 'Trovato'
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'router':
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    power += 0
+
+
+            if G.node[s]['type'] == 'central' and G.node[d]['type'] == 'central':
+                if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
+                    power += G.edge[s][d]['weight'] * self.alpha+4*self.power['link']
+                else:
+                    power += 0
+
+
+        return power
+
+
+    def getPower2(self,G):
+        power = 0
+        for node in G.nodes():
+            if G.node[node]['enabled'] == True:
+                power += G.node[node]['power']
+
+        for s,d in G.edges():
+            if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'router':
+                if G.node[d]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+self.power['link']
+                else:
+                    power += self.power['link']
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'central':
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    power += 2*self.power['link']
+
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'router':
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    power += 2*self.power['link']
+
+
+            if G.node[s]['type'] == 'central' and G.node[d]['type'] == 'central':
+                if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
+                    power += G.edge[s][d]['weight'] * self.alpha+4*self.power['link']
+                else:
+                    power += 4*self.power['link']
+
 
         return power
 
