@@ -7,22 +7,33 @@ color = {}
 color['router'] = 'red'
 color['access'] = 'blue'
 color['central'] = 'green'
-color['disabled'] = 'black'
+color['disabled'] = 'gray'
 
 class GreenNetwork():
 
-    def __init__(self,nodes,percentage_inactive,capacity,node_power,link_power,alpha):
+    def __init__(self,nodes,percentage_inactive,capacity,accessP,routerP,centralP,linkP,alpha):
         self.nodes = nodes
         self.inactive = percentage_inactive
         self.capacity = capacity
-        self.node_power = node_power
+        self.node_power = accessP
+
+        self.power = {}
+        self.power['access'] = accessP
+        self.power['router'] = routerP
+        self.power['link'] = linkP
+        self.power['central'] = centralP
+
         self.alpha = alpha
-        self.link_power = link_power
+        self.link_power = linkP
         self.transient = Queue.Queue()
         self.transient_v = []
-        self.linked = np.zeros(self.nodes)
+        self.linked = np.zeros(self.nodes+2)
         self.color_map = ["" for x in range(self.nodes+2)]
-        np.random.seed(8)
+
+        self.right_path = 1
+        self.edges = []
+
+        np.random.seed(6)
 
 
     def getCapacity(self):
@@ -30,7 +41,7 @@ class GreenNetwork():
 
     def anyPeer(self,G,node):
         for s,d in G.edges(node):
-            if G.node[s]['type'] == G.node[d]['type']:
+            if G.node[s]['type'] == G.node[d]['type'] and G.node[d]['enabled'] == True:
                 return True
         return False
 
@@ -80,8 +91,13 @@ class GreenNetwork():
         self.color_map[central_node] = color['central']
         self.color_map[central_node2] = color['central']
 
+        #todo sei qua
+        self.transient_v.append(central_node2)
+        self.transient_v.append(central_node)
+        self.linked[self.nodes] = 1
+        self.linked[self.nodes+1] = 1
 
-        for i in range(len(self.transient_v)):
+        for i in range(len(self.transient_v)-2):
             G.add_node(self.transient_v[i],type = 'router',enabled = True)
             self.color_map[self.transient_v[i]] = color['router']
             self.linked[self.transient_v[i]] = 1
@@ -99,8 +115,8 @@ class GreenNetwork():
             if self.linked[dev] == 0:
                 G.add_node(dev,type='access',enabled = True)
                 self.color_map[dev] = color['access']
-                G.add_edge(self.transient_v[nextRouter%len(self.transient_v)],dev,weight=0)
-                G.add_edge(self.transient_v[(nextRouter+1) % len(self.transient_v)], dev,weight=0)
+                G.add_edge(self.transient_v[nextRouter%(len(self.transient_v)-2)],dev,weight=0)
+                G.add_edge(self.transient_v[(nextRouter+1) % (len(self.transient_v)-2)], dev,weight=0)
                 nextRouter += 1
                 self.linked[dev] = 1
 
@@ -136,6 +152,7 @@ class GreenNetwork():
 
     def disable_node(self,G,n):
         G.node[n]['enabled'] = False
+        G.node[n]['power'] = 0
         self.color_map[n] = color['disabled']
 
 
@@ -146,36 +163,47 @@ class GreenNetwork():
                     try:
                         paths = list(nx.all_simple_paths(G,s,d))
                         paths.sort(lambda x, y: cmp(len(x), len(y)))
-                        #print(paths[1:10])
+                        self.right_path = 1
+                        self.edges = []
                         for path in paths:
-                            right_path = True
+                            self.right_path = 1
                             for node in path:
                                 if not G.node[node]['enabled']:
-                                    right_path = False
-                            if right_path == True:
-                                edges = path
+                                    self.right_path = 0
+                            if self.right_path == 1:
+                                self.edges = path
                                 break
-                        if right_path == False:
-                            return right_path
-
-                    except nx.NetworkXNoPath:
+                        if self.right_path == 0:
+                            return False
+                        for e in range(len(self.edges) - 1):
+                            G.edge[self.edges[e]][self.edges[e + 1]]['weight'] += tsd[s][d]
+                    except nx.NetworkXNoPath, UnboundLocalError:
+                        print 'Error'
                         return False
 
-                    for e in range(len(edges)-1):
-                        G.edge[edges[e]][edges[e+1]]['weight'] += tsd[s][d]
+
         return True
 
 
 
     def setNodePower(self,G,n):
         total_flow = 0
-        if G.node[n]['type'] == 'router':
+
+        if G.node[n]['enabled'] == False:
+            G.node[n]['power'] = 0
+            return
+
+        if G.node[n]['type'] == 'router' or G.node[n]['type'] == 'central':
             for s,d in G.edges(n):
                 total_flow += G.edge[s][d]['weight']
 
-            total_flow += self.alpha*self.node_power
+            total_flow = total_flow*self.alpha
+            total_flow += self.power[G.node[n]['type']]
             G.node[n]['power'] = total_flow
 
+        else:
+
+            G.node[n]['power'] = self.alpha*self.power[G.node[n]['type']]
             return total_flow
 
     def getNodeMinimumPower(self,G):
@@ -201,10 +229,23 @@ class GreenNetwork():
     def getPower2(self,G):
         power = 0
         for node in G.nodes():
-            if G.node[node]['type'] == 'router' and G.node[node]['enabled'] == True:
+            #if (G.node[node]['type'] == 'router' or G.node[node]['type'] == 'central') and G.node[node]['enabled'] == True:
+            if G.node[node]['enabled'] == True:
                 power += G.node[node]['power']
 
         for s,d in G.edges():
-            if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
-                power += G.edge[s][d]['weight']*self.alpha+self.link_power
+            #if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
+            if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'router':
+                power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'central':
+                power += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+
+            if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'access':
+                print 'Trovato'
+
         return power
+
+    def notUtilized(self,G,n):
+        if G.node[n]['power'] < self.power[G.node[n]['type']]:
+            return True
+        return False
