@@ -10,7 +10,7 @@ if __name__ == '__main__':
         for DELTA in [2,4,8]:
             f_max_vector = []
 
-            for i in range(5):
+            for i in range(4):
                 t = Topology()
                 #creo la matrice
                 T_matrix = t.createTrafficMatrix(0.5,1.5,N)

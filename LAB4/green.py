@@ -32,7 +32,7 @@ class GreenNetwork():
         self.right_path = 1
         self.edges = []
 
-        np.random.seed(5)
+        np.random.seed(4)
 
 
     def getCapacity(self):
@@ -49,6 +49,47 @@ class GreenNetwork():
             if G.node[d]['type'] == 'access':
                 return False
         return True
+
+    def getPowerPerType(self,G):
+        powerPertType = {}
+        powerPertType['router'] = 0
+        powerPertType['access'] = 0
+        powerPertType['central'] = 0
+        powerPertType['link'] = {}
+        powerPertType['link']['dr'] = 0
+        powerPertType['link']['rr'] = 0
+        powerPertType['link']['cc'] = 0
+        powerPertType['link']['rc'] = 0
+
+        for n in G.nodes():
+            powerPertType[G.node[n]['type']]+=G.node[n]['power']*self.alpha + self.power[G.node[n]['type']]
+
+        for s,d in G.edges():
+            if G.node[s]['type'] == 'access' and G.node[d]['type'] == 'router':
+                if G.node[d]['enabled'] == True:
+                    powerPertType['link']['dr'] += G.edge[s][d]['weight']*self.alpha+self.power['link']
+                else:
+                    powerPertType['link']['dr'] += self.power['link']
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'central':
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    powerPertType['link']['rc'] += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    powerPertType['link']['rc'] += 2*self.power['link']
+
+            if G.node[s]['type'] == 'router' and G.node[d]['type'] == 'router':
+                if G.node[d]['enabled'] == True and G.node[s]['enabled'] == True:
+                    powerPertType['link']['rr'] += G.edge[s][d]['weight']*self.alpha+2*self.power['link']
+                else:
+                    powerPertType['link']['rr'] += 2*self.power['link']
+
+
+            if G.node[s]['type'] == 'central' and G.node[d]['type'] == 'central':
+                if G.node[s]['enabled'] == True and G.node[d]['enabled'] == True:
+                    powerPertType['link']['cc'] += G.edge[s][d]['weight'] * self.alpha+4*self.power['link']
+                else:
+                    powerPertType['link']['cc'] += 4*self.power['link']
+
+        return powerPertType
 
     def getColorMap(self):
         return self.color_map

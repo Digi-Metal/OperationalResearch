@@ -11,8 +11,8 @@ color['central'] = 'green'
 
 if __name__ == '__main__':
 
-    for N in [16]:
-        for perc in [0.25]:
+    for N in [10]:
+        for perc in [0.2]:
             for capacity in [20]:
                 print '-----------------'
                 print 'Nodes = ',N,' R = ', perc*100, '% C = ',capacity
@@ -23,14 +23,13 @@ if __name__ == '__main__':
                 color_map = gn.getColorMap()
 
 
-
-
                 gn.routing(G,tsd,N)
 
                 for n in G.nodes():
                     gn.setNodePower(G,n)
                     print n,G.node[n]['power']
 
+                print gn.getPowerPerType(G)
                 initial = gn.getPower2(G)
                 print 'Initial topology',initial
 
@@ -55,7 +54,7 @@ if __name__ == '__main__':
                     node = transient_dict[i][0]
                     adj = G_copy.edges(node)
                     node_type = G_copy.node[node]['type']
-                    if gn.anyPeer(G_copy,node) or gn.justTheCentral(G_copy,node) :#and gn.notUtilized(G_copy,node) == True :
+                    if gn.anyPeer(G_copy,node):# or gn.justTheCentral(G_copy,node) :#and gn.notUtilized(G_copy,node) == True :
                         #print 'Trying to remove', node
                         power_node = G_copy.node[node]['power']
                         gn.disable_node(G_copy,node)
@@ -103,8 +102,9 @@ if __name__ == '__main__':
 
                 new_color_map = gn.getColorMap()
 
+                print gn.getPowerPerType(G_copy)
                 plt.figure()
-                title = 'After having disabled nodes | N = '+str(N)+ ' R ='+str(perc*100)+'%' # | Power = ' + str(gn.getPower2(G_copy))
+                title = 'After having disabled nodes | N = '+str(N)+ ' R ='+str(perc*100)+'%  | Power = ' + str(gn.getPower2(G_copy))
 
                 plt.title(title)
                 nx.draw_networkx(G_copy, node_color=new_color_map)
@@ -115,7 +115,6 @@ if __name__ == '__main__':
 
                 for n in G_copy.nodes():
                     gn.setNodePower(G_copy,n)
-                    print n,G_copy.node[n]['power']
 
                 #trying to remove edges
 
@@ -123,13 +122,14 @@ if __name__ == '__main__':
                     routers = {}
                     edges_r = []
 
-                    if G_copy.node[n]['enabled'] == False:
-                        for s,d in G_copy.edges(n):
-                            if G_copy.node[d]['type'] == 'access' or G_copy.node[d]['type'] == 'router':
-                                G_copy.remove_edge(s,d)
-                                gn.cleanTheGraphForRouting(G_copy,tsd)
-                                gn.routing(G_copy,tsd,N)
-
+                    #uncomment for second algorithm
+                    # if G_copy.node[n]['enabled'] == False and G_copy.node[n]['type'] == 'router':
+                    #     for s,d in G_copy.edges(n):
+                    #         if G_copy.node[d]['type'] == 'access' or G_copy.node[d]['type'] == 'central':
+                    #             G_copy.remove_edge(s,d)
+                    #             gn.cleanTheGraphForRouting(G_copy,tsd)
+                    #             gn.routing(G_copy,tsd,N)
+                    #end second
                     if G_copy.node[n]['type'] == 'access':
                         neighb = G_copy.edges(n)
                         for s,neigh in neighb:
@@ -157,7 +157,6 @@ if __name__ == '__main__':
 
                 for node in G_copy.nodes():
                     gn.setNodePower(G_copy,node)
-                    print n,G.node[n]['power']
 
 
                 after_edges = gn.getPower2(G_copy)
@@ -176,6 +175,8 @@ if __name__ == '__main__':
                 print 'Final node', active_nodes,active_list
                 print 'Initial edges', len(G.edges())
                 print 'Final edges', len(G_copy.edges())
+
+                print gn.getPowerPerType(G_copy)
 
                 plt.figure()
                 title = 'After removal of the edges | N = '+str(N)+ ' R ='+str(perc*100)+'% | Power = ' + str(gn.getPower2(G_copy))
